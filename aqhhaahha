@@ -1,1 +1,336 @@
-trade
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ContextActionService = game:GetService("ContextActionService")
+local Lighting = game:GetService("Lighting")
+
+local plr = Players.LocalPlayer
+
+-- BLUR BACKGROUND
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 0
+blurEffect.Parent = Lighting
+
+-- BLOCK ESC, TAB
+ContextActionService:BindAction("BlockEsc", function() 
+    return Enum.ContextActionResult.Sink 
+end, false, Enum.KeyCode.Escape)
+
+ContextActionService:BindAction("BlockTab", function() 
+    return Enum.ContextActionResult.Sink 
+end, false, Enum.KeyCode.Tab)
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "AdoptMeFreezeScript"
+gui.Parent = CoreGui
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 10
+
+-- MAIN CONTAINER (Size 400,100 - positioned at top center)
+local mainContainer = Instance.new("Frame")
+mainContainer.Size = UDim2.new(0, 400, 0, 100)
+mainContainer.Position = UDim2.new(0.5, -200, 0, 10) -- Top center with 10px margin
+mainContainer.BackgroundTransparency = 1
+mainContainer.Parent = gui
+
+-- MAIN WINDOW
+local window = Instance.new("Frame")
+window.Size = UDim2.new(1, 0, 1, 0)
+window.Position = UDim2.new(0, 0, 0, 0)
+window.BackgroundColor3 = Color3.fromRGB(20,20,26)
+window.BorderSizePixel = 0
+window.Active = true
+window.Parent = mainContainer
+Instance.new("UICorner", window).CornerRadius = UDim.new(0,10)
+
+-- HEADER
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1,0,0,40)
+header.BackgroundColor3 = Color3.fromRGB(15,15,20)
+header.Parent = window
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,10)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-40,1,0)
+title.Position = UDim2.new(0,10,0,0)
+title.BackgroundTransparency = 1
+title.Text = "NERO MM2 FREEZE TRADE SCRIPT "
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 13
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+-- MINIMIZE BUTTON
+local hideBtn = Instance.new("TextButton")
+hideBtn.Size = UDim2.new(0,25,0,25)
+hideBtn.Position = UDim2.new(1,-30,0.5,-12)
+hideBtn.BackgroundColor3 = Color3.fromRGB(30,30,40)
+hideBtn.Text = "-"
+hideBtn.TextColor3 = Color3.new(1,1,1)
+hideBtn.Font = Enum.Font.GothamBold
+hideBtn.TextSize = 16
+hideBtn.Parent = header
+Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0,6)
+
+-- CONTENT
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,0,1,-40)
+content.Position = UDim2.new(0,0,0,40)
+content.BackgroundTransparency = 1
+content.Parent = window
+
+-- TOGGLE CREATOR (Modified for side-by-side layout)
+local function createToggle(text, xPos, yPos)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 180, 0, 40)
+	frame.Position = UDim2.new(0, xPos, 0, yPos)
+	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
+	frame.Parent = content
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.6, 0, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 12
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+
+	local switchBg = Instance.new("Frame")
+	switchBg.Size = UDim2.new(0, 36, 0, 18)
+	switchBg.Position = UDim2.new(1, -50, 0.5, -9)
+	switchBg.BackgroundColor3 = Color3.fromRGB(60,60,70)
+	switchBg.Parent = frame
+	Instance.new("UICorner", switchBg).CornerRadius = UDim.new(1,0)
+
+	local thumb = Instance.new("Frame")
+	thumb.Size = UDim2.new(0, 14, 0, 14)
+	thumb.Position = UDim2.new(0, 2, 0.5, -7)
+	thumb.BackgroundColor3 = Color3.new(1,1,1)
+	thumb.Parent = switchBg
+	Instance.new("UICorner", thumb).CornerRadius = UDim.new(1,0)
+
+	local toggled = false
+
+	switchBg.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			toggled = not toggled
+
+			if toggled then
+				TweenService:Create(switchBg, TweenInfo.new(0.2), {
+					BackgroundColor3 = Color3.fromRGB(0,170,255)
+				}):Play()
+				TweenService:Create(thumb, TweenInfo.new(0.2), {
+					Position = UDim2.new(1,-16,0.5,-7)
+				}):Play()
+                -- Execute when toggled ON
+                print(text .. " enabled!")
+                if text == "Freeze Trade" then
+                    -- Add freeze trade logic here
+                elseif text == "Auto Ready/Accept" then
+                    -- Add auto ready logic here
+                end
+			else
+				TweenService:Create(switchBg, TweenInfo.new(0.2), {
+					BackgroundColor3 = Color3.fromRGB(60,60,70)
+				}):Play()
+				TweenService:Create(thumb, TweenInfo.new(0.2), {
+					Position = UDim2.new(0,2,0.5,-7)
+				}):Play()
+                -- Execute when toggled OFF
+                print(text .. " disabled!")
+                -- Add disable logic here
+			end
+		end
+	end)
+end
+
+-- TWO TOGGLES SIDE BY SIDE (Left: 10, Right: 210)
+createToggle("Freeze Trade", 10, 10)
+createToggle("Auto Ready/Accept", 210, 10)
+
+local minimized = false
+local originalSize = window.Size
+local originalContainerSize = mainContainer.Size
+local originalPosition = mainContainer.Position
+
+-- MINIMIZE FUNCTION
+hideBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    
+    if minimized then
+        local goal = {
+            Size = UDim2.new(0, 400, 0, 40)
+        }
+        local containerGoal = {
+            Size = UDim2.new(0, 400, 0, 40)
+        }
+        local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+        local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
+        tween:Play()
+        containerTween:Play()
+        content.Visible = false
+        hideBtn.Text = "+"
+        
+        tween.Completed:Connect(function()
+            window.Size = UDim2.new(0, 400, 0, 40)
+            mainContainer.Size = UDim2.new(0, 400, 0, 40)
+        end)
+    else
+        local goal = {
+            Size = originalSize
+        }
+        local containerGoal = {
+            Size = originalContainerSize
+        }
+        local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+        local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
+        tween:Play()
+        containerTween:Play()
+        content.Visible = true
+        hideBtn.Text = "-"
+        
+        tween.Completed:Connect(function()
+            window.Size = originalSize
+            mainContainer.Size = originalContainerSize
+        end)
+    end
+end)
+
+-- Handle touch for minimize button
+hideBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        minimized = not minimized
+        
+        if minimized then
+            local goal = {
+                Size = UDim2.new(0, 400, 0, 40)
+            }
+            local containerGoal = {
+                Size = UDim2.new(0, 400, 0, 40)
+            }
+            local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+            local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
+            tween:Play()
+            containerTween:Play()
+            content.Visible = false
+            hideBtn.Text = "+"
+            
+            tween.Completed:Connect(function()
+                window.Size = UDim2.new(0, 400, 0, 40)
+                mainContainer.Size = UDim2.new(0, 400, 0, 40)
+            end)
+        else
+            local goal = {
+                Size = originalSize
+            }
+            local containerGoal = {
+                Size = originalContainerSize
+            }
+            local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+            local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
+            tween:Play()
+            containerTween:Play()
+            content.Visible = true
+            hideBtn.Text = "-"
+            
+            tween.Completed:Connect(function()
+                window.Size = originalSize
+                mainContainer.Size = originalContainerSize
+            end)
+        end
+    end
+end)
+
+-- DRAGGING SYSTEM (Compatible with PC and Mobile)
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        
+        dragging = true
+        dragStart = input.Position
+        startPos = mainContainer.Position
+        
+        header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    end
+end)
+
+header.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        
+        dragging = false
+        dragStart = nil
+        startPos = nil
+        
+        header.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not dragging then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseMovement or
+       input.UserInputType == Enum.UserInputType.Touch then
+        
+        local delta = Vector2.new(
+            input.Position.X - dragStart.X,
+            input.Position.Y - dragStart.Y
+        )
+        
+        mainContainer.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local function makeMobileDraggable()
+    local touchStart = nil
+    local frameStart = nil
+    
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            touchStart = input.Position
+            frameStart = mainContainer.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    touchStart = nil
+                    frameStart = nil
+                end
+            end)
+        end
+    end)
+    
+    header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch and touchStart and frameStart then
+            local delta = input.Position - touchStart
+            mainContainer.Position = UDim2.new(
+                frameStart.X.Scale,
+                frameStart.X.Offset + delta.X,
+                frameStart.Y.Scale,
+                frameStart.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+makeMobileDraggable()
+
+blurEffect:Destroy()
+
+print("Adopt Me Freeze Script loaded and ready!")
