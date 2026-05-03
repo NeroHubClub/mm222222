@@ -1,336 +1,428 @@
+--[[
+    MM2 TRADE FREEZE UI - FIXED TOGGLE + CONFIRMATION TOGGLE
+    - Naayos ang toggle bug (hindi na kailangan i-spam)
+    - May "Auto Are U Sure" toggle na lumalabas kapag ON ang Auto Accept
+    - Smooth animation
+    - VISUAL ONLY
+--]]
+
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local ContextActionService = game:GetService("ContextActionService")
-local Lighting = game:GetService("Lighting")
 
-local plr = Players.LocalPlayer
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MM2TradeFreezeUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
 
--- BLUR BACKGROUND
-local blurEffect = Instance.new("BlurEffect")
-blurEffect.Size = 0
-blurEffect.Parent = Lighting
+-- ==================== MAINFRAME (MAS PINAHABA PARA SA EXTRA TOGGLE) ====================
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 360, 0, 260)  -- Pinahaba para sa extra toggle
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 20, 24)
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
 
--- BLOCK ESC, TAB
-ContextActionService:BindAction("BlockEsc", function() 
-    return Enum.ContextActionResult.Sink 
-end, false, Enum.KeyCode.Escape)
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 16)
+mainCorner.Parent = mainFrame
 
-ContextActionService:BindAction("BlockTab", function() 
-    return Enum.ContextActionResult.Sink 
-end, false, Enum.KeyCode.Tab)
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(40, 44, 52)
+mainStroke.Thickness = 1
+mainStroke.Transparency = 0.5
+mainStroke.Parent = mainFrame
 
--- GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "AdoptMeFreezeScript"
-gui.Parent = CoreGui
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.DisplayOrder = 10
+-- ==================== TITLE BAR ====================
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 44)
+titleBar.BackgroundColor3 = Color3.fromRGB(24, 26, 30)
+titleBar.BackgroundTransparency = 0
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
 
--- MAIN CONTAINER (Size 400,100 - positioned at top center)
-local mainContainer = Instance.new("Frame")
-mainContainer.Size = UDim2.new(0, 400, 0, 100)
-mainContainer.Position = UDim2.new(0.5, -200, 0, 10) -- Top center with 10px margin
-mainContainer.BackgroundTransparency = 1
-mainContainer.Parent = gui
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 16)
+titleCorner.Parent = titleBar
 
--- MAIN WINDOW
-local window = Instance.new("Frame")
-window.Size = UDim2.new(1, 0, 1, 0)
-window.Position = UDim2.new(0, 0, 0, 0)
-window.BackgroundColor3 = Color3.fromRGB(20,20,26)
-window.BorderSizePixel = 0
-window.Active = true
-window.Parent = mainContainer
-Instance.new("UICorner", window).CornerRadius = UDim.new(0,10)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -40, 1, 0)
+titleLabel.Position = UDim2.new(0, 16, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "NERO MM2 FREEZE TRADE SCRIPT [beta]"
+titleLabel.TextColor3 = Color3.fromRGB(220, 225, 235)
+titleLabel.Font = Enum.Font.GothamMedium
+titleLabel.TextSize = 15
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+titleLabel.Parent = titleBar
 
--- HEADER
-local header = Instance.new("Frame")
-header.Size = UDim2.new(1,0,0,40)
-header.BackgroundColor3 = Color3.fromRGB(15,15,20)
-header.Parent = window
-Instance.new("UICorner", header).CornerRadius = UDim.new(0,10)
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 28, 0, 28)
+closeButton.Position = UDim2.new(1, -12, 0.5, 0)
+closeButton.AnchorPoint = Vector2.new(1, 0.5)
+closeButton.BackgroundColor3 = Color3.fromRGB(35, 38, 45)
+closeButton.Text = "x"
+closeButton.TextColor3 = Color3.fromRGB(150, 155, 165)
+closeButton.Font = Enum.Font.Gotham
+closeButton.TextSize = 14
+closeButton.AutoButtonColor = true
+closeButton.BorderSizePixel = 0
+closeButton.Parent = titleBar
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,-40,1,0)
-title.Position = UDim2.new(0,10,0,0)
-title.BackgroundTransparency = 1
-title.Text = "NERO MM2 FREEZE TRADE SCRIPT "
-title.TextColor3 = Color3.new(1,1,1)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 13
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = header
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeButton
 
--- MINIMIZE BUTTON
-local hideBtn = Instance.new("TextButton")
-hideBtn.Size = UDim2.new(0,25,0,25)
-hideBtn.Position = UDim2.new(1,-30,0.5,-12)
-hideBtn.BackgroundColor3 = Color3.fromRGB(30,30,40)
-hideBtn.Text = "-"
-hideBtn.TextColor3 = Color3.new(1,1,1)
-hideBtn.Font = Enum.Font.GothamBold
-hideBtn.TextSize = 16
-hideBtn.Parent = header
-Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0,6)
+closeButton.MouseEnter:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(55, 58, 68)}):Play()
+end)
+closeButton.MouseLeave:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 38, 45)}):Play()
+end)
+closeButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
 
--- CONTENT
-local content = Instance.new("Frame")
-content.Size = UDim2.new(1,0,1,-40)
-content.Position = UDim2.new(0,0,0,40)
-content.BackgroundTransparency = 1
-content.Parent = window
+-- ==================== TOGGLE CONTAINER ====================
+local toggleContainer = Instance.new("Frame")
+toggleContainer.Name = "ToggleContainer"
+toggleContainer.Size = UDim2.new(1, -32, 0, 140)
+toggleContainer.Position = UDim2.new(0, 16, 0, 56)
+toggleContainer.BackgroundTransparency = 1
+toggleContainer.Parent = mainFrame
 
--- TOGGLE CREATOR (Modified for side-by-side layout)
-local function createToggle(text, xPos, yPos)
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0, 180, 0, 40)
-	frame.Position = UDim2.new(0, xPos, 0, yPos)
-	frame.BackgroundColor3 = Color3.fromRGB(30,30,40)
-	frame.Parent = content
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+-- ==================== TOGGLE 1: FREEZE TRADE ====================
+local freezeToggleFrame = Instance.new("Frame")
+freezeToggleFrame.Size = UDim2.new(1, 0, 0, 36)
+freezeToggleFrame.Position = UDim2.new(0, 0, 0, 0)
+freezeToggleFrame.BackgroundColor3 = Color3.fromRGB(24, 26, 30)
+freezeToggleFrame.BorderSizePixel = 0
+freezeToggleFrame.Parent = toggleContainer
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.6, 0, 1, 0)
-	label.Position = UDim2.new(0, 10, 0, 0)
-	label.BackgroundTransparency = 1
-	label.Text = text
-	label.TextColor3 = Color3.new(1,1,1)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 12
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = frame
+local toggleCorner1 = Instance.new("UICorner")
+toggleCorner1.CornerRadius = UDim.new(0, 10)
+toggleCorner1.Parent = freezeToggleFrame
 
-	local switchBg = Instance.new("Frame")
-	switchBg.Size = UDim2.new(0, 36, 0, 18)
-	switchBg.Position = UDim2.new(1, -50, 0.5, -9)
-	switchBg.BackgroundColor3 = Color3.fromRGB(60,60,70)
-	switchBg.Parent = frame
-	Instance.new("UICorner", switchBg).CornerRadius = UDim.new(1,0)
+local freezeLabel = Instance.new("TextLabel")
+freezeLabel.Size = UDim2.new(0.6, 0, 1, 0)
+freezeLabel.Position = UDim2.new(0, 12, 0, 0)
+freezeLabel.BackgroundTransparency = 1
+freezeLabel.Text = "FREEZE TRADE"
+freezeLabel.TextColor3 = Color3.fromRGB(200, 205, 215)
+freezeLabel.Font = Enum.Font.GothamMedium
+freezeLabel.TextSize = 13
+freezeLabel.TextXAlignment = Enum.TextXAlignment.Left
+freezeLabel.TextYAlignment = Enum.TextYAlignment.Center
+freezeLabel.Parent = freezeToggleFrame
 
-	local thumb = Instance.new("Frame")
-	thumb.Size = UDim2.new(0, 14, 0, 14)
-	thumb.Position = UDim2.new(0, 2, 0.5, -7)
-	thumb.BackgroundColor3 = Color3.new(1,1,1)
-	thumb.Parent = switchBg
-	Instance.new("UICorner", thumb).CornerRadius = UDim.new(1,0)
+local freezeToggle = Instance.new("Frame")
+freezeToggle.Size = UDim2.new(0, 44, 0, 24)
+freezeToggle.Position = UDim2.new(1, -12, 0.5, 0)
+freezeToggle.AnchorPoint = Vector2.new(1, 0.5)
+freezeToggle.BackgroundColor3 = Color3.fromRGB(55, 60, 70)
+freezeToggle.BorderSizePixel = 0
+freezeToggle.Parent = freezeToggleFrame
 
-	local toggled = false
+local toggleBgCorner = Instance.new("UICorner")
+toggleBgCorner.CornerRadius = UDim.new(1, 0)
+toggleBgCorner.Parent = freezeToggle
 
-	switchBg.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			toggled = not toggled
+local freezeKnob = Instance.new("Frame")
+freezeKnob.Size = UDim2.new(0, 18, 0, 18)
+freezeKnob.Position = UDim2.new(0, 3, 0.5, 0)
+freezeKnob.AnchorPoint = Vector2.new(0, 0.5)
+freezeKnob.BackgroundColor3 = Color3.fromRGB(200, 205, 215)
+freezeKnob.BorderSizePixel = 0
+freezeKnob.Parent = freezeToggle
 
-			if toggled then
-				TweenService:Create(switchBg, TweenInfo.new(0.2), {
-					BackgroundColor3 = Color3.fromRGB(0,170,255)
-				}):Play()
-				TweenService:Create(thumb, TweenInfo.new(0.2), {
-					Position = UDim2.new(1,-16,0.5,-7)
-				}):Play()
-                -- Execute when toggled ON
-                print(text .. " enabled!")
-                if text == "Freeze Trade" then
-                    -- Add freeze trade logic here
-                elseif text == "Auto Ready/Accept" then
-                    -- Add auto ready logic here
-                end
-			else
-				TweenService:Create(switchBg, TweenInfo.new(0.2), {
-					BackgroundColor3 = Color3.fromRGB(60,60,70)
-				}):Play()
-				TweenService:Create(thumb, TweenInfo.new(0.2), {
-					Position = UDim2.new(0,2,0.5,-7)
-				}):Play()
-                -- Execute when toggled OFF
-                print(text .. " disabled!")
-                -- Add disable logic here
-			end
-		end
-	end)
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1, 0)
+knobCorner.Parent = freezeKnob
+
+-- ==================== TOGGLE 2: AUTO ACCEPT ====================
+local autoToggleFrame = Instance.new("Frame")
+autoToggleFrame.Size = UDim2.new(1, 0, 0, 36)
+autoToggleFrame.Position = UDim2.new(0, 0, 0, 48)
+autoToggleFrame.BackgroundColor3 = Color3.fromRGB(24, 26, 30)
+autoToggleFrame.BorderSizePixel = 0
+autoToggleFrame.Parent = toggleContainer
+
+local toggleCorner2 = Instance.new("UICorner")
+toggleCorner2.CornerRadius = UDim.new(0, 10)
+toggleCorner2.Parent = autoToggleFrame
+
+local autoLabel = Instance.new("TextLabel")
+autoLabel.Size = UDim2.new(0.6, 0, 1, 0)
+autoLabel.Position = UDim2.new(0, 12, 0, 0)
+autoLabel.BackgroundTransparency = 1
+autoLabel.Text = "AUTO ACCEPT"
+autoLabel.TextColor3 = Color3.fromRGB(200, 205, 215)
+autoLabel.Font = Enum.Font.GothamMedium
+autoLabel.TextSize = 13
+autoLabel.TextXAlignment = Enum.TextXAlignment.Left
+autoLabel.TextYAlignment = Enum.TextYAlignment.Center
+autoLabel.Parent = autoToggleFrame
+
+local autoToggle = Instance.new("Frame")
+autoToggle.Size = UDim2.new(0, 44, 0, 24)
+autoToggle.Position = UDim2.new(1, -12, 0.5, 0)
+autoToggle.AnchorPoint = Vector2.new(1, 0.5)
+autoToggle.BackgroundColor3 = Color3.fromRGB(55, 60, 70)
+autoToggle.BorderSizePixel = 0
+autoToggle.Parent = autoToggleFrame
+
+local autoToggleCorner = Instance.new("UICorner")
+autoToggleCorner.CornerRadius = UDim.new(1, 0)
+autoToggleCorner.Parent = autoToggle
+
+local autoKnob = Instance.new("Frame")
+autoKnob.Size = UDim2.new(0, 18, 0, 18)
+autoKnob.Position = UDim2.new(0, 3, 0.5, 0)
+autoKnob.AnchorPoint = Vector2.new(0, 0.5)
+autoKnob.BackgroundColor3 = Color3.fromRGB(200, 205, 215)
+autoKnob.BorderSizePixel = 0
+autoKnob.Parent = autoToggle
+
+local autoKnobCorner = Instance.new("UICorner")
+autoKnobCorner.CornerRadius = UDim.new(1, 0)
+autoKnobCorner.Parent = autoKnob
+
+-- ==================== TOGGLE 3: AUTO ARE U SURE (lumalabas lang kapag ON ang Auto Accept) ====================
+local sureToggleFrame = Instance.new("Frame")
+sureToggleFrame.Name = "SureToggleFrame"
+sureToggleFrame.Size = UDim2.new(1, 0, 0, 36)
+sureToggleFrame.Position = UDim2.new(0, 0, 0, 96)
+sureToggleFrame.BackgroundColor3 = Color3.fromRGB(28, 30, 36)
+sureToggleFrame.BorderSizePixel = 0
+sureToggleFrame.Visible = false  -- Nakatago sa simula
+sureToggleFrame.Parent = toggleContainer
+
+local toggleCorner3 = Instance.new("UICorner")
+toggleCorner3.CornerRadius = UDim.new(0, 10)
+toggleCorner3.Parent = sureToggleFrame
+
+-- Subtle border para makita na ibang level
+local sureStroke = Instance.new("UIStroke")
+sureStroke.Color = Color3.fromRGB(235, 75, 85)
+sureStroke.Thickness = 1
+sureStroke.Transparency = 0.6
+sureStroke.Parent = sureToggleFrame
+
+local sureLabel = Instance.new("TextLabel")
+sureLabel.Size = UDim2.new(0.6, 0, 1, 0)
+sureLabel.Position = UDim2.new(0, 12, 0, 0)
+sureLabel.BackgroundTransparency = 1
+sureLabel.Text = "AUTO ARE U SURE?"
+sureLabel.TextColor3 = Color3.fromRGB(235, 75, 85)
+sureLabel.Font = Enum.Font.GothamMedium
+sureLabel.TextSize = 12
+sureLabel.TextXAlignment = Enum.TextXAlignment.Left
+sureLabel.TextYAlignment = Enum.TextYAlignment.Center
+sureLabel.Parent = sureToggleFrame
+
+local sureToggle = Instance.new("Frame")
+sureToggle.Size = UDim2.new(0, 44, 0, 24)
+sureToggle.Position = UDim2.new(1, -12, 0.5, 0)
+sureToggle.AnchorPoint = Vector2.new(1, 0.5)
+sureToggle.BackgroundColor3 = Color3.fromRGB(55, 60, 70)
+sureToggle.BorderSizePixel = 0
+sureToggle.Parent = sureToggleFrame
+
+local sureToggleCorner = Instance.new("UICorner")
+sureToggleCorner.CornerRadius = UDim.new(1, 0)
+sureToggleCorner.Parent = sureToggle
+
+local sureKnob = Instance.new("Frame")
+sureKnob.Size = UDim2.new(0, 18, 0, 18)
+sureKnob.Position = UDim2.new(0, 3, 0.5, 0)
+sureKnob.AnchorPoint = Vector2.new(0, 0.5)
+sureKnob.BackgroundColor3 = Color3.fromRGB(200, 205, 215)
+sureKnob.BorderSizePixel = 0
+sureKnob.Parent = sureToggle
+
+local sureKnobCorner = Instance.new("UICorner")
+sureKnobCorner.CornerRadius = UDim.new(1, 0)
+sureKnobCorner.Parent = sureKnob
+
+-- ==================== TOGGLE STATES ====================
+local freezeState = false
+local autoState = false
+local sureState = false
+
+-- Para maiwasan ang bug (debounce)
+local freezeDebounce = false
+local autoDebounce = false
+local sureDebounce = false
+
+-- ==================== FUNCTION PARA MAGUPDATE NG SURETOGGLE VISIBILITY ====================
+local function updateSureToggleVisibility()
+    if autoState then
+        sureToggleFrame.Visible = true
+        -- I-adjust ang container height para magkasya
+        toggleContainer.Size = UDim2.new(1, -32, 0, 140)
+        mainFrame.Size = UDim2.new(0, 360, 0, 260)
+    else
+        sureToggleFrame.Visible = false
+        -- I-reset ang sure state kapag nag-off ang auto accept
+        if sureState then
+            sureState = false
+            TweenService:Create(sureToggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(55, 60, 70)}):Play()
+            TweenService:Create(sureKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 3, 0.5, 0)}):Play()
+        end
+        toggleContainer.Size = UDim2.new(1, -32, 0, 100)
+        mainFrame.Size = UDim2.new(0, 360, 0, 220)
+    end
 end
 
--- TWO TOGGLES SIDE BY SIDE (Left: 10, Right: 210)
-createToggle("Freeze Trade", 10, 10)
-createToggle("Auto Ready/Accept", 210, 10)
-
-local minimized = false
-local originalSize = window.Size
-local originalContainerSize = mainContainer.Size
-local originalPosition = mainContainer.Position
-
--- MINIMIZE FUNCTION
-hideBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
+-- ==================== TOGGLE 1: FREEZE TRADE (FIXED - may debounce) ====================
+local function toggleFreeze()
+    if freezeDebounce then return end
+    freezeDebounce = true
     
-    if minimized then
-        local goal = {
-            Size = UDim2.new(0, 400, 0, 40)
-        }
-        local containerGoal = {
-            Size = UDim2.new(0, 400, 0, 40)
-        }
-        local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-        local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
-        tween:Play()
-        containerTween:Play()
-        content.Visible = false
-        hideBtn.Text = "+"
-        
-        tween.Completed:Connect(function()
-            window.Size = UDim2.new(0, 400, 0, 40)
-            mainContainer.Size = UDim2.new(0, 400, 0, 40)
-        end)
-    else
-        local goal = {
-            Size = originalSize
-        }
-        local containerGoal = {
-            Size = originalContainerSize
-        }
-        local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-        local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
-        tween:Play()
-        containerTween:Play()
-        content.Visible = true
-        hideBtn.Text = "-"
-        
-        tween.Completed:Connect(function()
-            window.Size = originalSize
-            mainContainer.Size = originalContainerSize
-        end)
+    freezeState = not freezeState
+    local targetBg = freezeState and Color3.fromRGB(235, 75, 85) or Color3.fromRGB(55, 60, 70)
+    local targetKnobPos = freezeState and 23 or 3
+    
+    TweenService:Create(freezeToggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = targetBg}):Play()
+    TweenService:Create(freezeKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, targetKnobPos, 0.5, 0)}):Play()
+    
+    task.wait(0.2)
+    freezeDebounce = false
+end
+
+-- ==================== TOGGLE 2: AUTO ACCEPT (FIXED - may debounce at nagpapakita ng sure toggle) ====================
+local function toggleAuto()
+    if autoDebounce then return end
+    autoDebounce = true
+    
+    autoState = not autoState
+    local targetBg = autoState and Color3.fromRGB(70, 150, 200) or Color3.fromRGB(55, 60, 70)
+    local targetKnobPos = autoState and 23 or 3
+    
+    TweenService:Create(autoToggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = targetBg}):Play()
+    TweenService:Create(autoKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, targetKnobPos, 0.5, 0)}):Play()
+    
+    -- Ipakita o itago ang "Auto Are U Sure" toggle
+    updateSureToggleVisibility()
+    
+    task.wait(0.2)
+    autoDebounce = false
+end
+
+-- ==================== TOGGLE 3: AUTO ARE U SURE ====================
+local function toggleSure()
+    if sureDebounce then return end
+    sureDebounce = true
+    
+    sureState = not sureState
+    local targetBg = sureState and Color3.fromRGB(235, 75, 85) or Color3.fromRGB(55, 60, 70)
+    local targetKnobPos = sureState and 23 or 3
+    
+    TweenService:Create(sureToggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = targetBg}):Play()
+    TweenService:Create(sureKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, targetKnobPos, 0.5, 0)}):Play()
+    
+    task.wait(0.2)
+    sureDebounce = false
+end
+
+-- ==================== CONNECT INPUTS (Fix: isa lang ang connection per object) ====================
+freezeToggle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleFreeze()
     end
 end)
 
--- Handle touch for minimize button
-hideBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        minimized = not minimized
-        
-        if minimized then
-            local goal = {
-                Size = UDim2.new(0, 400, 0, 40)
-            }
-            local containerGoal = {
-                Size = UDim2.new(0, 400, 0, 40)
-            }
-            local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-            local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
-            tween:Play()
-            containerTween:Play()
-            content.Visible = false
-            hideBtn.Text = "+"
-            
-            tween.Completed:Connect(function()
-                window.Size = UDim2.new(0, 400, 0, 40)
-                mainContainer.Size = UDim2.new(0, 400, 0, 40)
-            end)
-        else
-            local goal = {
-                Size = originalSize
-            }
-            local containerGoal = {
-                Size = originalContainerSize
-            }
-            local tween = TweenService:Create(window, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-            local containerTween = TweenService:Create(mainContainer, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), containerGoal)
-            tween:Play()
-            containerTween:Play()
-            content.Visible = true
-            hideBtn.Text = "-"
-            
-            tween.Completed:Connect(function()
-                window.Size = originalSize
-                mainContainer.Size = originalContainerSize
-            end)
-        end
+freezeToggleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleFreeze()
     end
 end)
 
--- DRAGGING SYSTEM (Compatible with PC and Mobile)
+autoToggle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleAuto()
+    end
+end)
+
+autoToggleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleAuto()
+    end
+end)
+
+sureToggle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleSure()
+    end
+end)
+
+sureToggleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleSure()
+    end
+end)
+
+-- ==================== BOTTOM STATUS ====================
+local statusLine = Instance.new("Frame")
+statusLine.Size = UDim2.new(1, -32, 0, 1)
+statusLine.Position = UDim2.new(0, 16, 1, -28)
+statusLine.BackgroundColor3 = Color3.fromRGB(45, 50, 60)
+statusLine.BackgroundTransparency = 0.6
+statusLine.BorderSizePixel = 0
+statusLine.Parent = mainFrame
+
+local statusText = Instance.new("TextLabel")
+statusText.Size = UDim2.new(1, -32, 0, 20)
+statusText.Position = UDim2.new(0, 16, 1, -22)
+statusText.BackgroundTransparency = 1
+statusText.Text = "Create By: Nero"
+statusText.TextColor3 = Color3.fromRGB(100, 105, 115)
+statusText.Font = Enum.Font.Gotham
+statusText.TextSize = 9
+statusText.TextXAlignment = Enum.TextXAlignment.Center
+statusText.Parent = mainFrame
+
+-- ==================== DRAG FUNCTIONALITY ====================
 local dragging = false
 local dragStart = nil
 local startPos = nil
 
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-       input.UserInputType == Enum.UserInputType.Touch then
-        
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        startPos = mainContainer.Position
-        
-        header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        startPos = mainFrame.Position
     end
 end)
 
-header.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-       input.UserInputType == Enum.UserInputType.Touch then
-        
+titleBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
-        dragStart = nil
-        startPos = nil
-        
-        header.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     end
 end)
 
-UIS.InputChanged:Connect(function(input)
-    if not dragging then return end
-    
-    if input.UserInputType == Enum.UserInputType.MouseMovement or
-       input.UserInputType == Enum.UserInputType.Touch then
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        local newX = startPos.X.Scale + (delta.X / screenGui.AbsoluteSize.X)
+        local newY = startPos.Y.Scale + (delta.Y / screenGui.AbsoluteSize.Y)
         
-        local delta = Vector2.new(
-            input.Position.X - dragStart.X,
-            input.Position.Y - dragStart.Y
-        )
+        newX = math.clamp(newX, 0.05, 0.95)
+        newY = math.clamp(newY, 0.05, 0.95)
         
-        mainContainer.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+        mainFrame.Position = UDim2.new(newX, 0, newY, 0)
     end
 end)
 
-local function makeMobileDraggable()
-    local touchStart = nil
-    local frameStart = nil
-    
-    header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            touchStart = input.Position
-            frameStart = mainContainer.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    touchStart = nil
-                    frameStart = nil
-                end
-            end)
-        end
-    end)
-    
-    header.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch and touchStart and frameStart then
-            local delta = input.Position - touchStart
-            mainContainer.Position = UDim2.new(
-                frameStart.X.Scale,
-                frameStart.X.Offset + delta.X,
-                frameStart.Y.Scale,
-                frameStart.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
-makeMobileDraggable()
-
-blurEffect:Destroy()
-
-print("Adopt Me Freeze Script loaded and ready!")
+print("MM2 Trade Freeze UI - Fixed toggle switches + Auto Are U Sure toggle")
